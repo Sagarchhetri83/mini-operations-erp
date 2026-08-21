@@ -46,6 +46,53 @@ The `npm run seed` command provisions the following roles for local development:
 | **Authentication** | JWT, bcryptjs |
 | **Testing** | Vitest, Supertest |
 
+## Business Logic & Transaction Rules
+
+The backend enforces the core ERP business rules at the API and database transaction level.
+
+### Inventory Availability
+
+Available stock is calculated as:
+
+`Available Quantity = Physical Quantity - Reserved Quantity`
+
+The system prevents operations from consuming or reserving stock beyond the available quantity.
+
+### Customer Order Reservation
+
+When a customer order is confirmed, the requested quantity is atomically added to `reservedQty`. The transaction fails if:
+
+`Reserved Quantity > Physical Quantity`
+
+This prevents overselling and protects against concurrent reservation requests.
+
+### Internal Stock Transfer
+
+Transfers follow a strict state-based workflow:
+
+`REQUESTED → DISPATCHED → RECEIVED`
+
+- **Dispatch:** source physical stock decreases.
+- **Before receipt:** destination stock remains unchanged.
+- **Receipt:** destination physical stock increases.
+- A transfer that has already been received cannot be received again.
+
+### Work Order Material Check
+
+Work orders compare required material against available inventory and calculate the resulting shortage automatically.
+
+### Role-Based Authorization
+
+Backend middleware restricts operations according to user role:
+
+- `ADMIN` — full operational access.
+- `OPERATIONS_USER` — inventory, work orders and transfers.
+- `SALES_USER` — customer orders and reservations.
+
+### Transaction Safety
+
+Inventory-changing operations use Prisma `$transaction` blocks so that inventory updates, status changes, and audit records succeed or fail together.
+
 ## System Architecture
 
 The application follows a standard client-server architecture with a strict boundary between frontend presentation and backend business logic.
