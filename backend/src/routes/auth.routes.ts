@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requireRole } from '../middleware/auth';
 
 const router: Router = Router();
 const prisma = new PrismaClient();
@@ -73,4 +73,19 @@ router.get('/me', requireAuth, (req: Request, res: Response): void => {
   res.json({ user: req.user });
 });
 
+// GET /api/auth/users - Get users for assignment
+router.get('/users', requireAuth, requireRole('ADMIN', 'OPERATIONS_USER'), async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, name: true, email: true, role: true },
+      orderBy: { name: 'asc' }
+    });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 export default router;
+
