@@ -1,11 +1,4 @@
-# Final Review: Phase 1 — Project Foundation
-
-This document reflects the actual current state of the Phase 1 implementation for the Fundsroom Mini Operations ERP case study.
-
-## What Was Implemented
-- **Project Scaffolding**: Initialized new `backend/` and `frontend/` directories mimicking the architecture of the old `Mini ERP + CRM Operations Portal`.
-- **Database Architecture**: Designed and implemented a completely new Prisma schema tailored for inventory, work orders, transfers, and customer orders.
-- **Authentication & RBAC**: Implemented stateless JWT authentication and Role-Based Access Control (RBAC) supporting `ADMIN`, `OPERATIONS_USER`, and `SALES_USER` roles.
+ RBAC**: Implemented stateless JWT authentication and Role-Based Access Control (RBAC) supporting `ADMIN`, `OPERATIONS_USER`, and `SALES_USER` roles.
 - **Backend API Foundation**: Created Express server with API routes for authentication and stubs for all future business modules.
 - **Frontend App Shell**: Created a Vite + React application with Axios JWT interception, protected routes, a responsive sidebar layout, and placeholder pages for all required modules.
 - **Testing Infrastructure**: Configured Vitest + Supertest for backend integration testing and wrote comprehensive auth tests.
@@ -53,8 +46,20 @@ The following patterns and files were carefully adapted from the READ-ONLY old p
 - **`frontend/src/App.tsx`**: Reused React Router, but replaced complex role-prefix routing (e.g. `/sales/`) with a cleaner single layout structure utilizing `ProtectedRoute`.
 - **`frontend/src/index.css`**: Reused CSS variables and core structural classes, but stripped out non-relevant CRM components.
 
+## Database Verification & Correction
+- **Issue Discovered**: The project was initially connected to a database named `mini_operations_erp`. The requirement was to strictly use `fundsroom_operations_erp`.
+- **Resolution**: Updated `backend/.env` to point `DATABASE_URL` to `fundsroom_operations_erp` on Port 5432 (without exposing credentials).
+- **Exact Verification Steps Performed**:
+  1. Updated `backend/.env` with the correct `DATABASE_URL` targeting `fundsroom_operations_erp`.
+  2. Ran `npx prisma migrate dev --name init_fundsroom` to ensure the schema was applied to the correct database.
+  3. Ran `npm run seed` to populate `fundsroom_operations_erp` with the 11 tables and demo data.
+  4. Ran `npx prisma migrate status` which confirmed "Database schema is up to date!" on `fundsroom_operations_erp`.
+  5. Ran `npm test` successfully, proving the backend can connect and query the database.
+  6. Checked `git status` and `.gitignore` to ensure no `.env` files or credentials were exposed.
+  7. Updated `README.md` to correctly reference `fundsroom_operations_erp` (and removed plaintext passwords from the document).
+
 ## Database / Schema Changes
-A **completely new database** (`mini_operations_erp`) was created. The old `mini_erp` database was untouched. 
+A **completely new database** (`fundsroom_operations_erp`) is correctly configured and used. The old `mini_erp` and other databases were untouched. 
 The new Prisma schema includes:
 - **`User`**: Updated with new `Role` enum (`ADMIN`, `OPERATIONS_USER`, `SALES_USER`) and `UserStatus` enum.
 - **`Category`, `Item`, `Location`**: New core master data tables.
@@ -72,7 +77,7 @@ The new Prisma schema includes:
 ## Tests Run and Their Results
 - Configured **Vitest + Supertest** for backend integration tests.
 - Created `src/__tests__/auth.test.ts`.
-- **Test Results**: Ran `npm test`. All 12/12 tests passed.
+- **Test Results**: Ran `npm test` against `fundsroom_operations_erp`. All 12/12 tests passed (Duration ~1.18s).
   - Successfully verified login for all 3 roles.
   - Successfully verified incorrect password/email rejection.
   - Successfully verified JWT decoding via `GET /api/auth/me`.
@@ -81,21 +86,14 @@ The new Prisma schema includes:
 
 ## Build/Compile Results
 - **Backend**: `npm run build` executed successfully (TypeScript compilation to `dist/`).
-- **Frontend**: `npm run build` executed successfully (Vite production build to `dist/`, 1642 modules transformed, built in ~1.9s). *Note: The frontend build initially failed due to missing `ImportMeta` typings, which was permanently fixed by adding `src/vite-env.d.ts`.*
+- **Frontend**: `npm run build` executed successfully (Vite production build to `dist/`, 1642 modules transformed, built in ~1.85s). *Note: The frontend build initially failed due to missing `ImportMeta` typings, which was permanently fixed by adding `src/vite-env.d.ts`.*
 
-## Issues, Warnings, or Known Limitations
-- The current inventory `availableQty` is computed on the fly (`physicalQty - reservedQty`). In later phases, queries involving sorting or filtering by `availableQty` will require specific Prisma raw queries or computed mappings.
-- The old project's database (Port 5433) could not be connected to via standard TCP. However, a local PostgreSQL 15 instance is actively running and accepting connections on Port 5432, which was used for the new `mini_operations_erp` database without issue.
+## Git & Security Verification
+- **Git Hygiene**: Verified `backend/.gitignore` and `frontend/.gitignore` ignore `.env`, `node_modules`, `dist`, and log files.
+- **Credential Check**: Verified that no `.env` files, passwords, or JWT secrets are tracked by Git. The `README.md` was also scrubbed of the local DB password.
+- **Git Status**: Confirmed the working directory is clean (aside from these documentation updates) and branch `main` is up to date with `origin/main`.
 
 ## Assumptions or Decisions Made
 1. **Frontend Routing Structure**: Assumed a single unified layout (`/dashboard`, `/inventory`, etc.) controlled by `<ProtectedRoute>` is superior to the old project's role-prefix routing (`/admin/dashboard`, `/sales/dashboard`), which causes unnecessary code duplication for a system of this size.
-2. **Database Separation**: Decided to explicitly name the new database `mini_operations_erp` and run it on Port 5432, ensuring the old project's `mini_erp` DB is completely isolated and untouched.
+2. **Database Correction**: Carefully migrated to `fundsroom_operations_erp` without running `prisma migrate reset`, dropping databases, or deleting the old accidental `mini_operations_erp` database, adhering strictly to the safety constraints.
 3. **Vitest over Jest**: Decided to use `vitest` for backend testing as it provides faster execution, native TypeScript support without `ts-jest`, and is the modern standard alongside the Vite frontend.
-
-## Verification Steps Performed
-- **Node & NPM validation**: Verified versions (v22.18.0, 11.6.2).
-- **DB Connection**: Verified database creation and connection.
-- **Migration & Seeding**: Verified Prisma migration `init` successfully built the schema, and `seed.ts` correctly populated the DB with sample locations, users, and inventory batches.
-- **Test Suite**: Verified all backend auth constraints using automated integration tests.
-- **Builds**: Verified both `backend` and `frontend` can compile flawlessly for production.
-- **Git Hygiene**: Explicitly ran `git ls-files | Select-String "\.env"` to verify no sensitive credentials (only `.env.example` templates) were checked into version control. Verified code was pushed successfully to the provided GitHub repository (`https://github.com/Sagarchhetri83/mini-operations-erp`).

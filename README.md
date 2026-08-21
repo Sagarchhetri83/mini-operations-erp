@@ -13,7 +13,7 @@ A full-stack case study project designed for managing internal warehouse operati
 ## Current Setup (Phase 1 Complete)
 - Project scaffolding and directory structure created (`frontend/`, `backend/`).
 - Custom `Prisma` schema defined for the exact case study requirements.
-- PostgreSQL database (`mini_operations_erp`) migrated.
+- PostgreSQL database (`fundsroom_operations_erp`) migrated.
 - Seed data generated for users, locations, inventory batches, and customers.
 - JWT and Role-Based Access Control (RBAC) implemented.
 - `Vitest` testing infrastructure created.
@@ -22,7 +22,7 @@ A full-stack case study project designed for managing internal warehouse operati
 ## Environment Variables
 The backend requires a `.env` file (copied from `.env.example`):
 ```env
-DATABASE_URL="postgresql://postgres:S@gar8347@localhost:5432/mini_operations_erp?schema=public"
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/fundsroom_operations_erp?schema=public"
 JWT_SECRET="fundsroom-erp-jwt-secret-change-in-production-2026"
 PORT=5001
 FRONTEND_URL=http://localhost:5173
@@ -33,7 +33,7 @@ VITE_API_URL=http://localhost:5001
 ```
 
 ## Local Setup
-1. **Database:** Ensure PostgreSQL is running and you have created a database named `mini_operations_erp`.
+1. **Database:** Ensure PostgreSQL is running and you have created a database named `fundsroom_operations_erp`.
 2. **Backend:**
    ```bash
    cd backend
