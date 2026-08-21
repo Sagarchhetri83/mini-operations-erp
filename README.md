@@ -12,6 +12,14 @@ Manufacturing and distribution businesses often suffer from a disconnect between
 
 The Mini Operations ERP solves this by enforcing a strict physical vs. reserved inventory model and offering a transparent internal transfer mechanism to resolve stock shortages. It provides a unified, real-time view of inventory levels, committed stock, internal stock movements, and manufacturing shortages for operations teams and sales representatives.
 
+## Demo Credentials
+
+The `npm run seed` command provisions the following roles for local development:
+
+* **Admin:** `admin@erp.com` / `Password123`
+* **Operations User:** `ops@erp.com` / `Password123`
+* **Sales User:** `sales@erp.com` / `Password123`
+
 ## Key Features
 
 | Feature | Description |
@@ -327,14 +335,6 @@ The application requires the following environment variables (values omitted for
 
 **Frontend (`frontend/.env`)**
 * `VITE_API_URL`
-
-## Demo Credentials
-
-The `npm run seed` command provisions the following roles for local development:
-
-* **Admin:** `admin@erp.com` / `Password123`
-* **Operations User:** `ops@erp.com` / `Password123`
-* **Sales User:** `sales@erp.com` / `Password123`
 
 ## Design Decisions
 
