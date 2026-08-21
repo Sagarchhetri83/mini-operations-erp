@@ -204,3 +204,73 @@ The internal transfers module was implemented with strict transactional rules to
 - The database schema relies on Prisma's sequential read-check inside transactions. While Postgres Read-Committed prevents race conditions during atomic decrements, a pure raw SQL `SELECT ... FOR UPDATE` was substituted with a transactionally safe decrement-then-check approach to avoid breaking away from Prisma idioms.
 
 **PHASE 4 STATUS: PASS**
+
+---
+
+# Phase 5 Review: Customer Orders & Stock Reservation
+
+This document reflects the verified state of the Phase 5 (Customer Orders) implementation following a complete audit against the concurrency and transactional safety requirements.
+
+## What Was Audited & Verified
+- **API Endpoints**:
+  - `GET /api/orders`
+  - `GET /api/orders/:id`
+  - `POST /api/orders` (Create DRAFT order)
+  - `PUT /api/orders/:id/confirm` (Confirm order and reserve stock)
+- **Order Fields**: Verified that `orderNo`, `customerId`, `status`, and `items` array with `inventoryId`, `itemId`, and `quantity` exist and are strictly validated.
+- **Status Transition Verification**:
+  - Allowed transition: `DRAFT -> CONFIRMED`.
+  - Re-confirming a `CONFIRMED` order returns a `400 Bad Request`.
+- **Reservation Calculation & Atomicity Verification**:
+  - Verified `reservedQty` correctly increments using Prisma's `increment` operation.
+  - Verified atomic database constraint: Immediately following the increment, the logic checks if `updatedInventory.reservedQty > updatedInventory.physicalQty`. If true, the entire transaction rolls back.
+  - Multi-item atomicity successfully validated: If one item out of an order's item list fails the reservation check, *all* reservations for that order are rolled back.
+  - Verified duplicate confirmation protection (via `InventoryTransaction` unique constraints and status checks) prevents reserving stock a second time for the same order.
+- **Concurrency Verification**:
+  - An automated concurrency test executing two simultaneous `/confirm` operations (using `Promise.all`) for the exact same limited stock successfully proved the backend does not oversell. Only one request receives `200` and the other receives `400`.
+- **RBAC Verification**:
+  - `SALES_USER` can create DRAFT orders.
+  - `SALES_USER` is explicitly blocked (`403 Forbidden`) from confirming orders.
+  - `ADMIN` and `OPERATIONS_USER` can confirm orders.
+- **Database Status**:
+  - `fundsroom_operations_erp` database remains untouched except for new test data.
+  - `npx prisma migrate status` confirms the schema is completely up to date. No resets or drops occurred.
+
+## Files Inspected, Created & Modified
+**Inspected**:
+- `backend/prisma/schema.prisma`
+
+**Created**:
+- `backend/src/__tests__/orders.test.ts` (9 robust test scenarios focusing heavily on atomicity and concurrency)
+
+**Modified**:
+- `backend/src/routes/orders.routes.ts`: Implemented order creation and atomic stock reservation logic.
+- `frontend/src/pages/CustomerOrders.tsx`: Built the functional UI with dynamic order item selection and actions.
+- `backend/src/__tests__/auth.test.ts`: Updated the stub test expectation from `501` to `200` to reflect the newly implemented endpoint.
+
+## Tests Executed and Results
+- Ran `npm test` across the entire workspace (Phase 1, 2, 3, 4, and 5 test suites).
+- **54 tests passed** (5 suites, 0 failures).
+- Specifically validated Phase 5:
+  - Unauthorized access = 401 (PASS)
+  - Invalid creation payloads = 400 (PASS)
+  - `SALES_USER` can create = 201 (PASS)
+  - `SALES_USER` cannot confirm = 403 (PASS)
+  - Valid `DRAFT -> CONFIRMED` increments `reservedQty` and creates audit (PASS)
+  - Re-confirmation = 400 without duplicate reservation (PASS)
+  - Multi-item atomicity (one fails -> all rollback) = PASS
+  - Concurrency test (simultaneous confirmation of limited stock) = PASS
+
+## Build / Compile Results
+- **Backend Build**: `npm run build` completed successfully.
+- **Frontend Build**: `npm run build` completed successfully.
+
+## Security & Git Status
+- Confirmed `git status` shows only our targeted files modifying the Phase 5 features. No secrets leaked.
+- Created exactly one atomic commit: `870b9fd feat: implement customer order reservation`.
+- Push to `origin/main` (https://github.com/Sagarchhetri83/mini-operations-erp.git) successfully delivered.
+
+## Known Limitations / Assumptions
+- The UI handles fetching inventory for the item dropdown in a basic manner due to the requirement to not over-design the frontend, but it functionally completes the order payload properly. Customer creation UI is omitted (customers must be seeded or created directly in DB) as per focus on the backend reservation mechanics.
+
+**PHASE 5 STATUS: PASS**
