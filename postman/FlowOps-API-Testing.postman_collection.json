@@ -1,0 +1,947 @@
+{
+  "info": {
+    "name": "FlowOps API Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "operationsToken",
+      "value": ""
+    },
+    {
+      "key": "salesToken",
+      "value": ""
+    },
+    {
+      "key": "mainWarehouseId",
+      "value": ""
+    },
+    {
+      "key": "branchWarehouseId",
+      "value": ""
+    },
+    {
+      "key": "itemSteelId",
+      "value": ""
+    },
+    {
+      "key": "invSteelMainId",
+      "value": ""
+    },
+    {
+      "key": "itemWidgetId",
+      "value": ""
+    },
+    {
+      "key": "invWidgetBranchAId",
+      "value": ""
+    },
+    {
+      "key": "beforeReservedQty",
+      "value": ""
+    },
+    {
+      "key": "draftOrderId",
+      "value": ""
+    },
+    {
+      "key": "destPhysicalBefore",
+      "value": ""
+    },
+    {
+      "key": "validTransferId",
+      "value": ""
+    },
+    {
+      "key": "invSteelMainPhysicalBefore",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup & Authentication",
+      "item": [
+        {
+          "name": "Admin login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@erp.com\",\"password\":\"Password123\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Operations User login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('operationsToken', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"ops@erp.com\",\"password\":\"Password123\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sales User login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var data = pm.response.json();",
+                  "pm.collectionVariables.set('salesToken', data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"sales@erp.com\",\"password\":\"Password123\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Fetch Inventory Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var data = pm.response.json();",
+                  "var mainWH = data.find(i => i.location.code === 'WH-MAIN').locationId;",
+                  "var branchWH = data.find(i => i.location.code === 'WH-BRANCH').locationId;",
+                  "pm.collectionVariables.set('mainWarehouseId', mainWH);",
+                  "pm.collectionVariables.set('branchWarehouseId', branchWH);",
+                  "",
+                  "var invSteel = data.find(i => i.item.sku === 'STL-ROD-6M' && i.location.code === 'WH-MAIN');",
+                  "if (invSteel) {",
+                  "  pm.collectionVariables.set('invSteelMainId', invSteel.id);",
+                  "  pm.collectionVariables.set('itemSteelId', invSteel.itemId);",
+                  "}",
+                  "",
+                  "var invWidgetBranch = data.find(i => i.item.sku === 'WDG-A100' && i.location.code === 'WH-BRANCH' && i.batch === 'BATCH-2026-A');",
+                  "if (invWidgetBranch) {",
+                  "  pm.collectionVariables.set('invWidgetBranchAId', invWidgetBranch.id);",
+                  "  pm.collectionVariables.set('itemWidgetId', invWidgetBranch.itemId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "inventory"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{operationsToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mandatory Tests",
+      "item": [
+        {
+          "name": "Test 1 - Cannot Reserve More Than Available",
+          "item": [
+            {
+              "name": "1.1 GET Inventory Before",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "var data = pm.response.json();",
+                      "pm.collectionVariables.set('beforeReservedQty', data.reservedQty);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invSteelMainId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invSteelMainId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{salesToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "1.2 Create Order (DRAFT)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                      "var data = pm.response.json();",
+                      "pm.collectionVariables.set('draftOrderId', data.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"customerId\":\"seed-cust-1\",\"items\":[{\"inventoryId\":\"{{invSteelMainId}}\",\"itemId\":\"{{itemSteelId}}\",\"quantity\":9999}]}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/orders",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{salesToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "1.3 Confirm Order (Fails)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 400', function () { pm.response.to.have.status(400); });",
+                      "pm.test('Error message indicates insufficient stock', function () {",
+                      "  var data = pm.response.json();",
+                      "  pm.expect(data.error).to.include('Insufficient stock');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/orders/{{draftOrderId}}/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "{{draftOrderId}}",
+                    "confirm"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{salesToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "1.4 GET Inventory After",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Reserved quantity remains unchanged', function () {",
+                      "  var data = pm.response.json();",
+                      "  var before = pm.collectionVariables.get('beforeReservedQty');",
+                      "  pm.expect(data.reservedQty).to.eql(before);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invSteelMainId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invSteelMainId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{salesToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 2 - Cannot Transfer More Than Available",
+          "item": [
+            {
+              "name": "2.1 GET Inventory Before",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "var data = pm.response.json();",
+                      "pm.collectionVariables.set('invSteelMainPhysicalBefore', data.physicalQty);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invSteelMainId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invSteelMainId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "2.2 Create Transfer (Fails)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 400', function () { pm.response.to.have.status(400); });",
+                      "pm.test('Error message indicates cannot transfer more than available', function () {",
+                      "  var data = pm.response.json();",
+                      "  pm.expect(data.error).to.include('Cannot transfer more than available quantity');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"sourceLocationId\":\"{{mainWarehouseId}}\",\"destLocationId\":\"{{branchWarehouseId}}\",\"itemId\":\"{{itemSteelId}}\",\"batch\":\"DEFAULT\",\"quantity\":9999}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "2.3 GET Inventory After",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Physical quantity remains unchanged', function () {",
+                      "  var data = pm.response.json();",
+                      "  var before = pm.collectionVariables.get('invSteelMainPhysicalBefore');",
+                      "  pm.expect(data.physicalQty).to.eql(before);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invSteelMainId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invSteelMainId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 3 - Destination Stock Only Increases After Receipt",
+          "item": [
+            {
+              "name": "3.1 GET Destination Inventory Before",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "var data = pm.response.json();",
+                      "pm.collectionVariables.set('destPhysicalBefore', data.physicalQty);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invWidgetBranchAId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invWidgetBranchAId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "3.2 Create Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                      "var data = pm.response.json();",
+                      "pm.collectionVariables.set('validTransferId', data.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"sourceLocationId\":\"{{mainWarehouseId}}\",\"destLocationId\":\"{{branchWarehouseId}}\",\"itemId\":\"{{itemWidgetId}}\",\"batch\":\"BATCH-2026-A\",\"quantity\":5}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "3.3 Dispatch Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Transfer status is DISPATCHED', function () {",
+                      "  var data = pm.response.json();",
+                      "  pm.expect(data.status).to.eql('DISPATCHED');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers/{{validTransferId}}/dispatch",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers",
+                    "{{validTransferId}}",
+                    "dispatch"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "3.4 GET Destination Inventory Post-Dispatch",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Destination physical quantity did NOT increase before receipt', function () {",
+                      "  var data = pm.response.json();",
+                      "  var before = pm.collectionVariables.get('destPhysicalBefore');",
+                      "  pm.expect(data.physicalQty).to.eql(before);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invWidgetBranchAId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invWidgetBranchAId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "3.5 Receive Transfer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Transfer status is RECEIVED', function () {",
+                      "  var data = pm.response.json();",
+                      "  pm.expect(data.status).to.eql('RECEIVED');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers/{{validTransferId}}/receive",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers",
+                    "{{validTransferId}}",
+                    "receive"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "3.6 GET Destination Inventory After Receipt",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                      "pm.test('Destination physical quantity INCREASED by transfer amount (5)', function () {",
+                      "  var data = pm.response.json();",
+                      "  var before = pm.collectionVariables.get('destPhysicalBefore');",
+                      "  pm.expect(data.physicalQty).to.eql(before + 5);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/inventory/{{invWidgetBranchAId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "{{invWidgetBranchAId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 4 - Same Transfer Cannot Be Received Twice",
+          "item": [
+            {
+              "name": "4.1 Receive Transfer Again",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 400 or 409', function () { pm.expect(pm.response.code).to.be.oneOf([400, 409]); });",
+                      "pm.test('Error message indicates cannot receive or already processed', function () {",
+                      "  var data = pm.response.json();",
+                      "  pm.expect(data.error).to.match(/Cannot receive transfer with status RECEIVED|Transfer receipt has already been processed/);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers/{{validTransferId}}/receive",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers",
+                    "{{validTransferId}}",
+                    "receive"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{operationsToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test 5 - Unauthorized User Cannot Perform Restricted Operation",
+          "item": [
+            {
+              "name": "5.1 Create Transfer (as Sales User)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 403 or 401', function () { pm.expect(pm.response.code).to.be.oneOf([401, 403]); });"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"sourceLocationId\":\"{{mainWarehouseId}}\",\"destLocationId\":\"{{branchWarehouseId}}\",\"itemId\":\"{{itemWidgetId}}\",\"batch\":\"BATCH-2026-A\",\"quantity\":1}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/transfers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "transfers"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{salesToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -22,19 +22,24 @@ const DashboardCard: React.FC<{
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
 
+  const roleLabel = user?.role
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase()) ?? '';
+
   return (
     <div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>
           <p className="page-subtitle">
-            Welcome back, <strong>{user?.name}</strong> &mdash; {user?.role.replace('_', ' ')}
+            Welcome back, <strong>{user?.name}</strong> &mdash; {roleLabel}
           </p>
         </div>
       </div>
 
       <div className="dashboard-hero">
-        <Boxes size={40} color="var(--primary)" />
+        <Boxes size={44} color="var(--primary)" />
         <h2>FlowOps</h2>
         <p>Manage your inventory, work orders, transfers, and customer reservations from one place.</p>
       </div>
@@ -65,8 +70,6 @@ const Dashboard: React.FC = () => {
           color="#D97706"
         />
       </div>
-
-
     </div>
   );
 };
