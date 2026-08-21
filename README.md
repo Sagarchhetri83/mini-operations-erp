@@ -171,44 +171,79 @@ backend/
     ├── routes/            # Express endpoint definitions
     └── index.ts           # Server entry point
 ```
-
 ## Testing
 
-The backend business logic is strictly verified using an isolated test database.
+The backend was validated through automated tests and a dedicated Postman API collection.
+
+### Automated Tests
 
 | Check | Result |
 |---|---|
-| **Backend build** | PASS |
-| **Frontend build** | PASS |
-| **Automated tests** | PASS |
-| **Test count** | 53/53 |
+| Backend build | PASS |
+| Frontend build | PASS |
+| Automated tests | PASS |
+| Test count | 53/53 |
+
+### Mandatory Case Study Tests
+
+All five mandatory tests specified in the Fundsroom Technical Case Study were implemented and validated:
+
+| Mandatory Test | Result |
+|---|---|
+| Cannot reserve more than available inventory | PASS |
+| Cannot transfer more than available inventory | PASS |
+| Destination stock increases only after transfer receipt | PASS |
+| Same transfer cannot be received twice | PASS |
+| Unauthorized user cannot perform restricted operation | PASS |
+
+### Postman API Collection
+
+A complete Postman collection is included in the repository:
+
+`postman/FlowOps-API-Testing.postman_collection.json`
+
+The collection contains authentication/setup requests and executable tests for all five mandatory business rules.
+
+The collection uses environment/collection variables for API URLs and authentication tokens and does not contain hardcoded production secrets.
+
+Postman collection:
+
+[Postman API Test Run] 
+<img width="1910" height="1018" alt="image" src="https://github.com/user-attachments/assets/a87662d1-b260-4a9d-9203-62bcb5aa66bd" />
+
+
+> Postman Collection Runner showing the API test execution against the FlowOps Railway environment with zero errors.
 
 ## Screenshots
 
-*(Note: Replace placeholders with actual image paths once captured)*
-
 ### Dashboard
-![Dashboard Placeholder](docs/assets/dashboard.png)
+<img width="1863" height="914" alt="image" src="https://github.com/user-attachments/assets/0e7a02bb-fe61-4030-bf5c-f76cac8151af" />
+
 > Central dashboard showing operational KPIs and current warehouse activity.
 
 ### Inventory
-![Inventory Placeholder](docs/assets/inventory.png)
+<img width="1862" height="915" alt="image" src="https://github.com/user-attachments/assets/e37c338a-c5e9-4308-b381-7a3d75a7430b" />
+
 > Inventory view showing physical, reserved, and available stock.
 
 ### Customer Orders
-![Customer Orders Placeholder](docs/assets/customer-orders.png)
+<img width="1862" height="919" alt="image" src="https://github.com/user-attachments/assets/e71f1058-5810-41fc-a04e-84d02080fe19" />
+
 > Customer order management and item reservation workflow.
 
 ### Work Orders
-![Work Orders Placeholder](docs/assets/work-orders.png)
+<img width="1859" height="914" alt="image" src="https://github.com/user-attachments/assets/6bc0f1c7-0c9f-40d8-bb16-ae4ca5cbeb12" />
+
 > Work order management interface.
 
 ### Transfers
-![Transfers Placeholder](docs/assets/transfers.png)
+<img width="1863" height="922" alt="image" src="https://github.com/user-attachments/assets/67560fe9-7114-4ea9-8a04-1f2d701c7f7f" />
+
 > Internal warehouse transfer workflow.
 
 ### Login
-![Login Placeholder](docs/assets/login.png)
+<img width="535" height="569" alt="image" src="https://github.com/user-attachments/assets/4fc68c61-9519-4f14-8671-07c55f5ec47f" />
+
 > Role-based authentication entry point.
 
 ## Local Development
