@@ -1,0 +1,250 @@
+// Prisma schema for Fundsroom Mini Operations ERP
+// Business flow: Inventory → Work Order → Stock Check → Internal Transfer / Shortage → Customer Reservation
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  OPERATIONS_USER
+  SALES_USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WorkOrderStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TransferStatus {
+  REQUESTED
+  DISPATCHED
+  RECEIVED
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+enum TransactionType {
+  STOCK_IN          // Manual stock receipt
+  STOCK_OUT         // Manual stock removal
+  TRANSFER_OUT      // Dispatched from this location
+  TRANSFER_IN       // Received at this location
+  RESERVATION       // Stock reserved for a customer order
+  RESERVATION_RELEASE // Reservation released on order cancel
+}
+
+// ── Models ────────────────────────────────────────────────────────────────
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role       @default(SALES_USER)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  workOrders           WorkOrder[]           @relation("AssignedWorkOrders")
+  createdWorkOrders    WorkOrder[]           @relation("CreatedWorkOrders")
+  createdTransfers     InternalTransfer[]
+  createdOrders        CustomerOrder[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  items Item[]
+
+  @@map("categories")
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  name        String
+  sku         String   @unique
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  unit        String   @default("PCS")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  inventory   Inventory[]
+  workOrders  WorkOrder[]
+  transfers   InternalTransfer[]
+  orderItems  OrderItem[]
+
+  @@map("items")
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+
+  inventory          Inventory[]
+  outboundTransfers  InternalTransfer[] @relation("SourceLocation")
+  inboundTransfers   InternalTransfer[] @relation("DestLocation")
+  workOrders         WorkOrder[]
+
+  @@map("locations")
+}
+
+// Core inventory model: one row per (item, location, batch) combination
+model Inventory {
+  id          String   @id @default(cuid())
+  itemId      String
+  item        Item     @relation(fields: [itemId], references: [id])
+  locationId  String
+  location    Location @relation(fields: [locationId], references: [id])
+  batch       String   @default("DEFAULT")
+  // Physical quantity = stock actually on hand
+  physicalQty Int      @default(0)
+  // Reserved quantity = committed to confirmed customer orders but not yet dispatched
+  reservedQty Int      @default(0)
+  // availableQty = physicalQty - reservedQty (computed in application layer, NOT stored)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems   OrderItem[]
+  transactions InventoryTransaction[]
+
+  // Prevent duplicate inventory rows for same item + location + batch
+  @@unique([itemId, locationId, batch])
+  @@map("inventory")
+}
+
+// Immutable audit log of every quantity change — enables traceability and idempotency
+model InventoryTransaction {
+  id          String          @id @default(cuid())
+  inventoryId String
+  inventory   Inventory       @relation(fields: [inventoryId], references: [id])
+  type        TransactionType
+  quantity    Int             // Always positive; direction determined by type
+  referenceId String?         // FK to WorkOrder / Transfer / CustomerOrder (as string)
+  note        String?
+  createdById String
+  createdBy   User            @relation(fields: [createdById], references: [id])
+  createdAt   DateTime        @default(now())
+
+  // Prevent the same reference from being applied twice (idempotency guard)
+  @@unique([referenceId, type])
+  @@map("inventory_transactions")
+}
+
+model WorkOrder {
+  id              String          @id @default(cuid())
+  workOrderNo     String          @unique
+  locationId      String
+  location        Location        @relation(fields: [locationId], references: [id])
+  itemId          String
+  item            Item            @relation(fields: [itemId], references: [id])
+  requiredQty     Int
+  // Shortage is computed at query time: max(0, requiredQty - availableQty)
+  // We store a snapshot at creation / status change for reporting
+  shortageQty     Int             @default(0)
+  status          WorkOrderStatus @default(ASSIGNED)
+  assignedUserId  String
+  assignedUser    User            @relation("AssignedWorkOrders", fields: [assignedUserId], references: [id])
+  createdById     String
+  createdBy       User            @relation("CreatedWorkOrders", fields: [createdById], references: [id])
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("work_orders")
+}
+
+model InternalTransfer {
+  id               String         @id @default(cuid())
+  transferNo       String         @unique
+  sourceLocationId String
+  sourceLocation   Location       @relation("SourceLocation", fields: [sourceLocationId], references: [id])
+  destLocationId   String
+  destLocation     Location       @relation("DestLocation", fields: [destLocationId], references: [id])
+  itemId           String
+  item             Item           @relation(fields: [itemId], references: [id])
+  batch            String         @default("DEFAULT")
+  quantity         Int
+  status           TransferStatus @default(REQUESTED)
+  createdById      String
+  createdBy        User           @relation(fields: [createdById], references: [id])
+  notes            String?
+  dispatchedAt     DateTime?
+  receivedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("internal_transfers")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders CustomerOrder[]
+
+  @@map("customers")
+}
+
+model CustomerOrder {
+  id          String      @id @default(cuid())
+  orderNo     String      @unique
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  status      OrderStatus @default(DRAFT)
+  createdById String
+  createdBy   User        @relation(fields: [createdById], references: [id])
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items OrderItem[]
+
+  @@map("customer_orders")
+}
+
+model OrderItem {
+  id          String        @id @default(cuid())
+  orderId     String
+  order       CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  inventoryId String
+  inventory   Inventory     @relation(fields: [inventoryId], references: [id])
+  itemId      String
+  item        Item          @relation(fields: [itemId], references: [id])
+  quantity    Int
+  // Snapshot of item name at time of order (history accuracy)
+  itemName    String
+
+  @@map("order_items")
+}
