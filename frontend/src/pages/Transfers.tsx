@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import Modal from '../components/UI/Modal';
 
 interface Transfer {
   id: string;
@@ -174,55 +175,55 @@ export default function Transfers() {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content card">
-            <h2 style={{ marginTop: 0 }}>Create Internal Transfer</h2>
-            {formError && <div className="error-alert">{formError}</div>}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Item</label>
-                <select className="form-control" value={formData.itemId} onChange={e => setFormData({...formData, itemId: e.target.value})} required>
-                  <option value="">Select an Item...</option>
-                  {items.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Batch</label>
-                <input type="text" className="form-control" value={formData.batch} onChange={e => setFormData({...formData, batch: e.target.value})} required />
-              </div>
-
-              <div className="form-group">
-                <label>Source Location</label>
-                <select className="form-control" value={formData.sourceLocationId} onChange={e => setFormData({...formData, sourceLocationId: e.target.value})} required>
-                  <option value="">Select Source Location...</option>
-                  {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Destination Location</label>
-                <select className="form-control" value={formData.destLocationId} onChange={e => setFormData({...formData, destLocationId: e.target.value})} required>
-                  <option value="">Select Destination Location...</option>
-                  {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Quantity</label>
-                <input type="number" className="form-control" min="1" value={formData.quantity} onChange={e => setFormData({...formData, quantity: parseInt(e.target.value) || 0})} required />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Transfer</button>
-              </div>
-            </form>
+      <Modal
+        title="Create Internal Transfer"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" form="create-transfer-form">Create Transfer</button>
+          </>
+        }
+      >
+        {formError && <div className="error-alert">{formError}</div>}
+        
+        <form id="create-transfer-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Item</label>
+            <select className="form-control" value={formData.itemId} onChange={e => setFormData({...formData, itemId: e.target.value})} required>
+              <option value="">Select an Item...</option>
+              {items.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}
+            </select>
           </div>
-        </div>
-      )}
+          
+          <div className="form-group">
+            <label>Batch</label>
+            <input type="text" className="form-control" value={formData.batch} onChange={e => setFormData({...formData, batch: e.target.value})} required />
+          </div>
+
+          <div className="form-group">
+            <label>Source Location</label>
+            <select className="form-control" value={formData.sourceLocationId} onChange={e => setFormData({...formData, sourceLocationId: e.target.value})} required>
+              <option value="">Select Source Location...</option>
+              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Destination Location</label>
+            <select className="form-control" value={formData.destLocationId} onChange={e => setFormData({...formData, destLocationId: e.target.value})} required>
+              <option value="">Select Destination Location...</option>
+              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Quantity</label>
+            <input type="number" className="form-control" min="1" value={formData.quantity} onChange={e => setFormData({...formData, quantity: parseInt(e.target.value) || 0})} required />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

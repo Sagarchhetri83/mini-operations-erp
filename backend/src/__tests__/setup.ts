@@ -8,9 +8,12 @@
 import 'dotenv/config';
 
 // Ensure critical env vars exist before tests run
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set. Create a .env file in backend/');
+if (!process.env.TEST_DATABASE_URL) {
+  throw new Error('TEST_DATABASE_URL is not set. Create a .env file in backend/');
 }
+
+// Redirect all Prisma calls in tests to the test database
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 
 if (!process.env.JWT_SECRET) {
   // Use a test secret if not provided

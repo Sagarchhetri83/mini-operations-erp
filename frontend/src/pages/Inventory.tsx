@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import Modal from '../components/UI/Modal';
 
 interface InventoryItem {
   id: string;
@@ -94,18 +95,25 @@ export default function Inventory() {
     }
   };
 
-  const handleAdjustQuantity = async (id: string, currentQty: number, reservedQty: number) => {
-    const newQtyStr = prompt(`Enter new physical quantity (must be >= ${reservedQty}):`, currentQty.toString());
-    if (newQtyStr === null) return;
-    
-    const newQty = parseInt(newQtyStr, 10);
-    if (isNaN(newQty) || newQty < 0) {
-      alert('Please enter a valid non-negative number.');
+  const [adjustModalOpen, setAdjustModalOpen] = useState(false);
+  const [adjustData, setAdjustData] = useState<{ id: string, current: number, reserved: number, newQty: number | '' }>({ id: '', current: 0, reserved: 0, newQty: '' });
+
+  const openAdjustModal = (id: string, currentQty: number, reservedQty: number) => {
+    setAdjustData({ id, current: currentQty, reserved: reservedQty, newQty: currentQty });
+    setAdjustModalOpen(true);
+  };
+
+  const handleAdjustSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newQty = Number(adjustData.newQty);
+    if (isNaN(newQty) || newQty < 0 || newQty < adjustData.reserved) {
+      alert(`Please enter a valid number >= ${adjustData.reserved}`);
       return;
     }
 
     try {
-      await api.put(`/inventory/${id}`, { physicalQty: newQty });
+      await api.put(`/inventory/${adjustData.id}`, { physicalQty: newQty });
+      setAdjustModalOpen(false);
       fetchData();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to update inventory');
@@ -168,11 +176,11 @@ export default function Inventory() {
                     </td>
                     {canManage && (
                       <td style={{ textAlign: 'center' }}>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
-                          onClick={() => handleAdjustQuantity(inv.id, inv.physicalQty, inv.reservedQty)}
-                        >
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.875rem' }}
+                            onClick={() => openAdjustModal(inv.id, inv.physicalQty, inv.reservedQty)}
+                          >
                           Adjust
                         </button>
                       </td>
@@ -185,79 +193,112 @@ export default function Inventory() {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content card">
-            <h2 style={{ marginTop: 0 }}>Receive New Stock</h2>
-            {formError && <div className="error-alert">{formError}</div>}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Item</label>
-                <select 
-                  className="form-control" 
-                  value={formData.itemId} 
-                  onChange={e => setFormData({...formData, itemId: e.target.value})}
-                  required
-                >
-                  <option value="">Select an Item...</option>
-                  {items.map(i => (
-                    <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Location</label>
-                <select 
-                  className="form-control" 
-                  value={formData.locationId} 
-                  onChange={e => setFormData({...formData, locationId: e.target.value})}
-                  required
-                >
-                  <option value="">Select a Location...</option>
-                  {locations.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Batch Number</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  value={formData.batch}
-                  onChange={e => setFormData({...formData, batch: e.target.value})}
-                  required 
-                  placeholder="e.g. BATCH-2026-X"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Physical Quantity</label>
-                <input 
-                  type="number" 
-                  className="form-control" 
-                  min="0"
-                  value={formData.physicalQty}
-                  onChange={e => setFormData({...formData, physicalQty: parseInt(e.target.value) || 0})}
-                  required 
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Receive Stock
-                </button>
-              </div>
-            </form>
+      <Modal
+        title="Receive New Stock"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" form="receive-stock-form">
+              Receive Stock
+            </button>
+          </>
+        }
+      >
+        {formError && <div className="error-alert">{formError}</div>}
+        
+        <form id="receive-stock-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Item</label>
+            <select 
+              className="form-control" 
+              value={formData.itemId} 
+              onChange={e => setFormData({...formData, itemId: e.target.value})}
+              required
+            >
+              <option value="">Select an Item...</option>
+              {items.map(i => (
+                <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+          
+          <div className="form-group">
+            <label>Location</label>
+            <select 
+              className="form-control" 
+              value={formData.locationId} 
+              onChange={e => setFormData({...formData, locationId: e.target.value})}
+              required
+            >
+              <option value="">Select a Location...</option>
+              {locations.map(l => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Batch Number</label>
+            <input 
+              type="text" 
+              className="form-control" 
+              value={formData.batch}
+              onChange={e => setFormData({...formData, batch: e.target.value})}
+              required 
+              placeholder="e.g. BATCH-2026-X"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Physical Quantity</label>
+            <input 
+              type="number" 
+              className="form-control" 
+              min="0"
+              value={formData.physicalQty}
+              onChange={e => setFormData({...formData, physicalQty: parseInt(e.target.value) || 0})}
+              required 
+            />
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        title="Adjust Inventory Quantity"
+        isOpen={adjustModalOpen}
+        onClose={() => setAdjustModalOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setAdjustModalOpen(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" form="adjust-stock-form">
+              Adjust Stock
+            </button>
+          </>
+        }
+      >
+        <form id="adjust-stock-form" onSubmit={handleAdjustSubmit}>
+          <div className="form-group">
+            <label>New Physical Quantity</label>
+            <input 
+              type="number" 
+              className="form-control" 
+              min={adjustData.reserved}
+              value={adjustData.newQty}
+              onChange={e => setAdjustData({...adjustData, newQty: e.target.value ? parseInt(e.target.value) : ''})}
+              required 
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+              Must be at least {adjustData.reserved} (currently reserved).
+            </p>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

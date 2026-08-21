@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import Modal from '../components/UI/Modal';
 
 interface WorkOrder {
   id: string;
@@ -173,50 +174,50 @@ export default function WorkOrders() {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content card">
-            <h2 style={{ marginTop: 0 }}>Create Work Order</h2>
-            {formError && <div className="error-alert">{formError}</div>}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Item</label>
-                <select className="form-control" value={formData.itemId} onChange={e => setFormData({...formData, itemId: e.target.value})} required>
-                  <option value="">Select an Item...</option>
-                  {items.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Location</label>
-                <select className="form-control" value={formData.locationId} onChange={e => setFormData({...formData, locationId: e.target.value})} required>
-                  <option value="">Select a Location...</option>
-                  {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Required Quantity</label>
-                <input type="number" className="form-control" min="1" value={formData.requiredQty} onChange={e => setFormData({...formData, requiredQty: parseInt(e.target.value) || 0})} required />
-              </div>
-
-              <div className="form-group">
-                <label>Assign To (Operations User)</label>
-                <select className="form-control" value={formData.assignedUserId} onChange={e => setFormData({...formData, assignedUserId: e.target.value})} required>
-                  <option value="">Select User...</option>
-                  {users.filter(u => u.role === 'OPERATIONS_USER').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Work Order</button>
-              </div>
-            </form>
+      <Modal
+        title="Create Work Order"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" form="create-wo-form">Create Work Order</button>
+          </>
+        }
+      >
+        {formError && <div className="error-alert">{formError}</div>}
+        
+        <form id="create-wo-form" onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Item</label>
+            <select className="form-control" value={formData.itemId} onChange={e => setFormData({...formData, itemId: e.target.value})} required>
+              <option value="">Select an Item...</option>
+              {items.map(i => <option key={i.id} value={i.id}>{i.name} ({i.sku})</option>)}
+            </select>
           </div>
-        </div>
-      )}
+          
+          <div className="form-group">
+            <label>Location</label>
+            <select className="form-control" value={formData.locationId} onChange={e => setFormData({...formData, locationId: e.target.value})} required>
+              <option value="">Select a Location...</option>
+              {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Required Quantity</label>
+            <input type="number" className="form-control" min="1" value={formData.requiredQty} onChange={e => setFormData({...formData, requiredQty: parseInt(e.target.value) || 0})} required />
+          </div>
+
+          <div className="form-group">
+            <label>Assign To (Operations User)</label>
+            <select className="form-control" value={formData.assignedUserId} onChange={e => setFormData({...formData, assignedUserId: e.target.value})} required>
+              <option value="">Select User...</option>
+              {users.filter(u => u.role === 'OPERATIONS_USER').map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

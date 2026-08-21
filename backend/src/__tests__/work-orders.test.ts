@@ -17,7 +17,7 @@ beforeAll(async () => {
   const adminRes = await request(app).post('/api/auth/login').send({ email: 'admin@erp.com', password: 'Password123' });
   adminToken = adminRes.body.token;
 
-  const salesRes = await request(app).post('/api/auth/login').send({ email: 'sales1@erp.com', password: 'Password123' });
+  const salesRes = await request(app).post('/api/auth/login').send({ email: 'sales@erp.com', password: 'Password123' });
   salesToken = salesRes.body.token;
 
   // Create a clean item and location for testing

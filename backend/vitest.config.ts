@@ -14,6 +14,7 @@ export default defineConfig({
       NODE_ENV: 'test',
     },
     // Global test setup
+    globalSetup: ['./src/__tests__/globalSetup.ts'],
     setupFiles: ['./src/__tests__/setup.ts'],
     // Test file pattern
     include: ['src/__tests__/**/*.test.ts'],

@@ -9,8 +9,8 @@ import request from 'supertest';
 import app from '../index';
 
 const ADMIN_EMAIL = 'admin@erp.com';
-const OPS_EMAIL = 'ops1@erp.com';
-const SALES_EMAIL = 'sales1@erp.com';
+const OPS_EMAIL = 'ops@erp.com';
+const SALES_EMAIL = 'sales@erp.com';
 const PASSWORD = 'Password123';
 const WRONG_PASSWORD = 'WrongPassword';
 

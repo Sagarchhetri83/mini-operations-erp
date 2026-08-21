@@ -134,8 +134,8 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT /api/orders/:id/confirm - Confirm order and reserve stock
-// Accessible only by ADMIN, OPERATIONS_USER
-router.put('/:id/confirm', requireRole('ADMIN', 'OPERATIONS_USER'), async (req: Request, res: Response) => {
+// Accessible by ADMIN, OPERATIONS_USER, and SALES_USER
+router.put('/:id/confirm', requireRole('ADMIN', 'OPERATIONS_USER', 'SALES_USER'), async (req: Request, res: Response) => {
   try {
     const orderId = req.params.id as string;
 

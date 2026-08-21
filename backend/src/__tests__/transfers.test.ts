@@ -19,10 +19,10 @@ describe('Internal Transfers Module', () => {
     const loginAdmin = await request(app).post('/api/auth/login').send({ email: 'admin@erp.com', password: 'Password123' });
     adminToken = loginAdmin.body.token;
 
-    const loginOps = await request(app).post('/api/auth/login').send({ email: 'ops1@erp.com', password: 'Password123' });
+    const loginOps = await request(app).post('/api/auth/login').send({ email: 'ops@erp.com', password: 'Password123' });
     opsToken = loginOps.body.token;
 
-    const loginSales = await request(app).post('/api/auth/login').send({ email: 'sales1@erp.com', password: 'Password123' });
+    const loginSales = await request(app).post('/api/auth/login').send({ email: 'sales@erp.com', password: 'Password123' });
     salesToken = loginSales.body.token;
 
     // Fetch master data

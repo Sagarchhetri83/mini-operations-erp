@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
+import Modal from '../components/UI/Modal';
 
 interface OrderItem {
   id: string;
@@ -25,7 +26,7 @@ interface Order {
 
 export default function CustomerOrders() {
   const { user } = useAuth();
-  const canManage = user?.role === 'ADMIN' || user?.role === 'OPERATIONS_USER';
+  const canManage = user?.role === 'ADMIN' || user?.role === 'OPERATIONS_USER' || user?.role === 'SALES_USER';
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -182,63 +183,84 @@ export default function CustomerOrders() {
         )}
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content card" style={{ maxWidth: '600px' }}>
-            <h2 style={{ marginTop: 0 }}>Create Customer Order</h2>
-            {formError && <div className="error-alert">{formError}</div>}
+      <Modal
+        title="Create Customer Order"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        size="lg"
+        footer={
+          <>
+            <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" form="create-order-form" disabled={orderItems.length === 0}>Create Order</button>
+          </>
+        }
+      >
+        {formError && <div className="error-alert">{formError}</div>}
+        
+        <form id="create-order-form" onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="form-group">
+              <label>Customer ID</label>
+              <select className="form-control" value={formData.customerId} onChange={e => setFormData({...formData, customerId: e.target.value})} required>
+                <option value="">- Select Customer -</option>
+                <option value="seed-cust-1">Acme Corporation</option>
+                <option value="seed-cust-2">BuildRight Ltd</option>
+                <option value="seed-cust-3">TechParts Inc</option>
+              </select>
+            </div>
             
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Customer ID</label>
-                <input type="text" className="form-control" value={formData.customerId} onChange={e => setFormData({...formData, customerId: e.target.value})} required placeholder="Enter Customer ID" />
-              </div>
-              
-              <div className="form-group">
-                <label>Notes</label>
-                <input type="text" className="form-control" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
-              </div>
-
-              <h4>Order Items</h4>
-              <div style={{ marginBottom: '1rem', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '4px' }}>
-                {orderItems.map((item, idx) => {
-                  const inv = inventory.find(i => i.id === item.inventoryId);
-                  return (
-                    <div key={idx} style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>{inv?.item?.name} ({inv?.location?.name} - {inv?.batch})</div>
-                      <div>Qty: {item.quantity}</div>
-                      <button type="button" className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => setOrderItems(orderItems.filter((_, i) => i !== idx))}>Remove</button>
-                    </div>
-                  );
-                })}
-
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                  <select className="form-control" id="invSelect" style={{ flex: 2 }}>
-                    <option value="">Select Inventory...</option>
-                    {inventory.map(inv => (
-                      <option key={inv.id} value={inv.id}>{inv.item.name} | {inv.location.name} | {inv.batch} (Avail: {inv.physicalQty - inv.reservedQty})</option>
-                    ))}
-                  </select>
-                  <input type="number" id="qtyInput" className="form-control" style={{ flex: 1 }} min="1" placeholder="Qty" />
-                  <button type="button" className="btn btn-secondary" onClick={() => {
-                    const invId = (document.getElementById('invSelect') as HTMLSelectElement).value;
-                    const qty = parseInt((document.getElementById('qtyInput') as HTMLInputElement).value) || 0;
-                    if (invId && qty > 0) {
-                      const inv = inventory.find(i => i.id === invId);
-                      setOrderItems([...orderItems, { inventoryId: invId, quantity: qty, itemId: inv.item.id }]);
-                    }
-                  }}>Add</button>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create Order</button>
-              </div>
-            </form>
+            <div className="form-group">
+              <label>Notes</label>
+              <input type="text" className="form-control" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Optional order notes" />
+            </div>
           </div>
-        </div>
-      )}
+
+          <h4 style={{ marginBottom: '1rem', fontWeight: 600 }}>Order Items</h4>
+          <div style={{ marginBottom: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '1rem', background: 'var(--bg-app)' }}>
+            <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+              {orderItems.length > 0 ? orderItems.map((item, idx) => {
+                const inv = inventory.find(i => i.id === item.inventoryId);
+                return (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem', padding: '0.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500 }}>{inv?.item?.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{inv?.location?.name} | Batch: {inv?.batch}</div>
+                    </div>
+                    <div style={{ fontWeight: 600, width: '80px', textAlign: 'center' }}>Qty: {item.quantity}</div>
+                    <button type="button" className="btn btn-secondary" style={{ color: 'var(--danger)', padding: '0.25rem 0.5rem' }} onClick={() => setOrderItems(orderItems.filter((_, i) => i !== idx))}>Remove</button>
+                  </div>
+                );
+              }) : (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-surface)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--border-color)' }}>
+                  No items added yet.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+              <select className="form-control" id="invSelect" style={{ flex: 2 }}>
+                <option value="">Select Inventory Item...</option>
+                {inventory.map(inv => (
+                  <option key={inv.id} value={inv.id}>
+                    {inv.item.name} ({inv.location.name}) — Avail: {inv.physicalQty - inv.reservedQty}
+                  </option>
+                ))}
+              </select>
+              <input type="number" id="qtyInput" className="form-control" style={{ width: '100px' }} min="1" placeholder="Qty" />
+              <button type="button" className="btn btn-secondary" style={{ whiteSpace: 'nowrap' }} onClick={() => {
+                const invId = (document.getElementById('invSelect') as HTMLSelectElement).value;
+                const qty = parseInt((document.getElementById('qtyInput') as HTMLInputElement).value) || 0;
+                if (invId && qty > 0) {
+                  const inv = inventory.find(i => i.id === invId);
+                  setOrderItems([...orderItems, { inventoryId: invId, quantity: qty, itemId: inv.item.id }]);
+                  (document.getElementById('invSelect') as HTMLSelectElement).value = '';
+                  (document.getElementById('qtyInput') as HTMLInputElement).value = '';
+                }
+              }}>Add Item</button>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

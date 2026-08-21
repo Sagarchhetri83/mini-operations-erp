@@ -32,23 +32,11 @@ async function main() {
   });
 
   const opsUser1 = await prisma.user.upsert({
-    where: { email: 'ops1@erp.com' },
+    where: { email: 'ops@erp.com' },
     update: { password: passwordHash },
     create: {
-      name: 'Operations User 1',
-      email: 'ops1@erp.com',
-      password: passwordHash,
-      role: Role.OPERATIONS_USER,
-      status: UserStatus.ACTIVE,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'ops2@erp.com' },
-    update: { password: passwordHash },
-    create: {
-      name: 'Operations User 2',
-      email: 'ops2@erp.com',
+      name: 'Operations User',
+      email: 'ops@erp.com',
       password: passwordHash,
       role: Role.OPERATIONS_USER,
       status: UserStatus.ACTIVE,
@@ -56,23 +44,11 @@ async function main() {
   });
 
   const salesUser1 = await prisma.user.upsert({
-    where: { email: 'sales1@erp.com' },
+    where: { email: 'sales@erp.com' },
     update: { password: passwordHash },
     create: {
-      name: 'Sales User 1',
-      email: 'sales1@erp.com',
-      password: passwordHash,
-      role: Role.SALES_USER,
-      status: UserStatus.ACTIVE,
-    },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'sales2@erp.com' },
-    update: { password: passwordHash },
-    create: {
-      name: 'Sales User 2',
-      email: 'sales2@erp.com',
+      name: 'Sales User',
+      email: 'sales@erp.com',
       password: passwordHash,
       role: Role.SALES_USER,
       status: UserStatus.ACTIVE,
@@ -81,10 +57,8 @@ async function main() {
 
   console.log('  ✅ Users created:');
   console.log('     admin@erp.com       → ADMIN');
-  console.log('     ops1@erp.com        → OPERATIONS_USER');
-  console.log('     ops2@erp.com        → OPERATIONS_USER');
-  console.log('     sales1@erp.com      → SALES_USER');
-  console.log('     sales2@erp.com      → SALES_USER');
+  console.log('     ops@erp.com         → OPERATIONS_USER');
+  console.log('     sales@erp.com       → SALES_USER');
   console.log('     Password for all:   Password123\n');
 
   // ─── 2. CATEGORIES ────────────────────────────────────────────────────────
@@ -422,10 +396,8 @@ async function main() {
   console.log('');
   console.log('📋 Login credentials:');
   console.log('   admin@erp.com   / Password123  (ADMIN)');
-  console.log('   ops1@erp.com    / Password123  (OPERATIONS_USER)');
-  console.log('   ops2@erp.com    / Password123  (OPERATIONS_USER)');
-  console.log('   sales1@erp.com  / Password123  (SALES_USER)');
-  console.log('   sales2@erp.com  / Password123  (SALES_USER)');
+  console.log('   ops@erp.com     / Password123  (OPERATIONS_USER)');
+  console.log('   sales@erp.com   / Password123  (SALES_USER)');
 }
 
 main()
