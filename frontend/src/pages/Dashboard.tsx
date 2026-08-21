@@ -66,12 +66,7 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      <div className="card" style={{ marginTop: '24px', padding: '20px' }}>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          <strong>Phase 1 complete.</strong> Authentication and project foundation are working.
-          Business screens (Inventory, Work Orders, Transfers, Customer Orders) will be implemented in subsequent phases.
-        </p>
-      </div>
+
     </div>
   );
 };
