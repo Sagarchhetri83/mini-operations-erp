@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
 
       <div className="dashboard-hero">
         <Boxes size={40} color="var(--primary)" />
-        <h2>Mini Operations ERP</h2>
+        <h2>FlowOps</h2>
         <p>Manage your inventory, work orders, transfers, and customer reservations from one place.</p>
       </div>
 

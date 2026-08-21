@@ -49,7 +49,7 @@ const Login: React.FC = () => {
           <div className="auth-logo">
             <Boxes size={24} color="#fff" />
           </div>
-          <h1 className="auth-title">Mini Operations ERP</h1>
+          <h1 className="auth-title">FlowOps</h1>
           <p className="auth-subtitle">Sign in to your account</p>
         </div>
 

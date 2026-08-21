@@ -86,7 +86,7 @@ const Layout: React.FC = () => {
           <div className="sidebar-logo">
             <Boxes size={18} color="#fff" />
           </div>
-          <span className="sidebar-title">Ops ERP</span>
+          <span className="sidebar-title">FlowOps</span>
           <button
             className="sidebar-close"
             onClick={() => setSidebarOpen(false)}
