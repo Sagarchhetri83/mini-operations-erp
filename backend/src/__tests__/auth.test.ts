@@ -128,13 +128,13 @@ describe('RBAC — Role-based access control', () => {
       .post('/api/auth/login')
       .send({ email: ADMIN_EMAIL, password: PASSWORD });
 
-    const token = loginRes.body.token;
+    const adminToken = loginRes.body.token;
 
     const res = await request(app)
-      .get('/api/inventory')
-      .set('Authorization', `Bearer ${token}`);
+      .get('/api/work-orders')
+      .set('Authorization', `Bearer ${adminToken}`);
 
-    // 501 means the route accepted auth and hit the stub handler (not rejected)
+    // 501 means the route accepted auth and hit the stub handler (not 401/403)
     expect(res.status).toBe(501);
   });
 });
