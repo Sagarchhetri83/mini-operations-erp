@@ -1,5 +1,3 @@
-# Fundsroom Mini Operations ERP
-
 A streamlined, modern full-stack Enterprise Resource Planning (ERP) case study designed to manage multi-warehouse inventory, customer order fulfillment, production work orders, and internal stock transfers. Built with a focus on inventory accuracy, strict reservation mathematics, and robust role-based operational workflows.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -245,6 +243,42 @@ Postman collection:
 <img width="535" height="569" alt="image" src="https://github.com/user-attachments/assets/4fc68c61-9519-4f14-8671-07c55f5ec47f" />
 
 > Role-based authentication entry point.
+
+## Deployment
+
+The application is deployed using:
+
+- **Frontend:** Vercel
+- **Backend & PostgreSQL Database:** Railway
+
+### Vercel Frontend Deployment
+
+<img width="1864" height="921" alt="image" src="https://github.com/user-attachments/assets/e6c2c80c-5ae7-4bfd-b021-64c6a0977d26" />
+
+
+> Vercel dashboard showing the deployed FlowOps frontend and deployment status.
+
+### Railway Backend & Database
+
+<img width="1864" height="918" alt="image" src="https://github.com/user-attachments/assets/09be2e78-3c37-474f-9213-86b0f07b751e" />
+
+
+> Railway dashboard showing the deployed backend service and PostgreSQL database.
+
+### Production Application
+
+The deployed frontend communicates with the production backend API through environment-based configuration.
+
+- Frontend: Vercel
+  
+- Backend API: Railway
+
+  <img width="1144" height="206" alt="image" src="https://github.com/user-attachments/assets/4a1bbcdc-138f-44eb-be57-805e87ab23ea" />
+
+- Database: PostgreSQL on Railway
+
+  <img width="1862" height="923" alt="image" src="https://github.com/user-attachments/assets/e9046f66-1782-4385-ae67-5f6d021dee92" />
+
 
 ## Local Development
 
