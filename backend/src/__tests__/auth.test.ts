@@ -134,7 +134,7 @@ describe('RBAC — Role-based access control', () => {
       .get('/api/orders')
       .set('Authorization', `Bearer ${adminToken}`);
 
-    // 501 means the route accepted auth and hit the stub handler (not 401/403)
-    expect(res.status).toBe(501);
+    // 200 means the route accepted auth and hit the implemented handler
+    expect(res.status).toBe(200);
   });
 });
