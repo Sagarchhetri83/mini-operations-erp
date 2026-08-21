@@ -131,3 +131,76 @@ This document reflects the verified state of the Phase 3 (Work Orders) implement
 - Users dropdown endpoint fetches users by `ACTIVE` status but relies on a generic `auth.routes.ts` fetch; works fine for the scope.
 
 **PHASE 3 STATUS: PASS**
+
+---
+
+# Phase 4 Review: Internal Stock Transfers
+
+This document reflects the verified state of the Phase 4 (Internal Stock Transfers) implementation following a complete audit against the concurrency and transactional safety requirements.
+
+## Implementation Summary
+The internal transfers module was implemented with strict transactional rules to ensure stock is accurately dispatched from one location and received at another without race conditions causing overselling.
+
+## What Was Audited & Verified
+- **API Endpoints**:
+  - `GET /api/transfers`
+  - `GET /api/transfers/:id`
+  - `POST /api/transfers` (Create Transfer Request)
+  - `POST /api/transfers/:id/dispatch` (Dispatch action)
+  - `POST /api/transfers/:id/receive` (Receive action)
+- **Transfer Status Workflow**:
+  - Allowed transitions (`REQUESTED -> DISPATCHED` and `DISPATCHED -> RECEIVED`) are strictly enforced.
+  - Attempting to receive a `REQUESTED` transfer, dispatch a `DISPATCHED` transfer, or interact with a `RECEIVED` transfer properly returns `400 Bad Request` or `409 Conflict`.
+- **Dispatch Transaction Behavior (Concurrency Safe)**:
+  - Validated that source physical inventory decreases.
+  - Validated that if stock drops below zero, the entire transaction rolls back via Prisma error bubbling.
+  - `TRANSFER_OUT` audit log correctly written in the same transaction.
+  - Duplicate dispatch protection successfully blocks the same transfer from deducting stock twice.
+- **Receipt Transaction Behavior (Atomicity)**:
+  - Verified `upsert` mechanism successfully creates destination inventory if it doesn't exist, and correctly increments physical quantity if it does exist.
+  - `TRANSFER_IN` audit log successfully written atomically.
+  - Unique constraint on audit reference explicitly protects against a duplicate receipt race condition (P2002 error gracefully caught returning `409`).
+- **RBAC Verification**:
+  - Verified that backend middleware enforces `ADMIN` and `OPERATIONS_USER` rules.
+  - Tested that `SALES_USER` cannot create, dispatch, or receive transfers (`403 Forbidden`).
+- **Database Status**:
+  - Checked `npx prisma migrate status` — schema remains completely synced without drops, data deletions, or arbitrary resets.
+
+## Files Inspected, Created & Modified
+**Inspected**:
+- `backend/prisma/schema.prisma`
+
+**Created**:
+- `backend/src/__tests__/transfers.test.ts` (16 targeted test scenarios)
+
+**Modified**:
+- `backend/src/routes/transfers.routes.ts`: Fully implemented module logic with `prisma.$transaction`.
+- `frontend/src/pages/Transfers.tsx`: Fully built functional React frontend connecting to the APIs.
+- `backend/src/__tests__/auth.test.ts`: Updated the stub endpoint check to target `/api/orders`.
+
+## Tests Executed and Results
+- Ran `npm test` across the entire workspace (Phase 1, 2, 3, and 4 test suites).
+- **45 tests passed** (4 suites, 0 failures).
+- Specifically validated Phase 4 constraints:
+  - TEST 1: Cannot transfer more than available inventory (400) - PASS
+  - TEST 2/3/4: `SALES_USER` correctly restricted (403) - PASS
+  - TEST 5/6: Successful dispatch correctly deducts source without affecting destination - PASS
+  - TEST 7/8: Successful receipt correctly increments destination without re-deducting source - PASS
+  - TEST 9/10/11: Status transitions strictly guarded against repeats or skipping - PASS
+  - TEST 12/13: Source and destination uniqueness and quantity validation - PASS
+  - TEST 14/15: Destination inventory creation via upsert behaves as intended - PASS
+  - TEST 16: Concurrency test using `Promise.all` on the exact same limited stock successfully rejected the oversell with `400` while allowing the first transaction through (`200`).
+
+## Build / Compile Results
+- **Backend Build**: `npm run build` completed successfully after fixing TS typing errors on route parameters.
+- **Frontend Build**: `npm run build` completed successfully via Vite production process.
+
+## Security & Git Status
+- Confirmed `git status` showed only our targeted files modifying the Phase 4 features.
+- Created atomic commit `c2c9ce5 feat: implement internal stock transfers`.
+- Push to `origin/main` (https://github.com/Sagarchhetri83/mini-operations-erp.git) successfully delivered.
+
+## Known Limitations / Assumptions
+- The database schema relies on Prisma's sequential read-check inside transactions. While Postgres Read-Committed prevents race conditions during atomic decrements, a pure raw SQL `SELECT ... FOR UPDATE` was substituted with a transactionally safe decrement-then-check approach to avoid breaking away from Prisma idioms.
+
+**PHASE 4 STATUS: PASS**
