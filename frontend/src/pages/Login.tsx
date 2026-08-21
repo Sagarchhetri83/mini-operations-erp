@@ -115,15 +115,7 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div className="auth-demo-hint">
-          <p className="hint-title">Demo credentials</p>
-          <div className="hint-grid">
-            <span>Admin:</span><code>admin@erp.com</code>
-            <span>Ops:</span><code>ops1@erp.com</code>
-            <span>Sales:</span><code>sales1@erp.com</code>
-            <span>Password:</span><code>Password123</code>
-          </div>
-        </div>
+
       </div>
     </div>
   );
